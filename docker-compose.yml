@@ -1,0 +1,123 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - user_service
+      - song_service
+      - playlist_service
+    environment:
+      - USER_SERVICE_URL=http://user_service:8000
+      - SONG_SERVICE_URL=http://song_service:8001
+      - PLAYLIST_SERVICE_URL=http://playlist_service:8002
+
+  user_service:
+    build:
+      context: ./backend/user_service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      user_db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=user_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=userdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./backend/user_service:/app
+
+  song_service:
+    build:
+      context: ./backend/song_service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    depends_on:
+      song_db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=song_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=songdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./backend/song_service:/app
+
+  playlist_service:
+    build:
+      context: ./backend/playlist_service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    depends_on:
+      playlist_db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=playlist_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=playlistdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./backend/playlist_service:/app
+
+  user_db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=userdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  song_db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=songdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - song_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  playlist_db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=playlistdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - playlist_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  user_db_data:
+  song_db_data:
+  playlist_db_data:

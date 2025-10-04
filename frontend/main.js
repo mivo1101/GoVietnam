@@ -1,8 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     // API ENDPOINTS
-    const USER_API_BASE_URL = window.USER_API_BASE_URL;
-    const SONG_API_BASE_URL = window.SONG_API_BASE_URL;
-    const PLAYLIST_API_BASE_URL = window.PLAYLIST_API_BASE_URL;
+    const USER_API_IP = '_USER_API_URL_';
+    const SONG_API_IP = '_SONG_API_URL_';
+    const PLAYLIST_API_IP = '_PLAYLIST_API_URL_';
+
+    const USER_API_BASE_URL = `http://${USER_API_IP}:8000`;
+    const SONG_API_BASE_URL = `http://${SONG_API_IP}:8001`;
+    const PLAYLIST_API_BASE_URL = `http://${PLAYLIST_API_IP}:8002`;
+
+    //const USER_API_BASE_URL = "http://4.237.221.167:8000";
+    //const SONG_API_BASE_URL = "http://20.167.106.73:8001";
+    //const PLAYLIST_API_BASE_URL = "http://20.167.82.84:8002";
 
     // DOM ELEMENTS
     const messageBox = document.getElementById('message-box');
@@ -126,8 +134,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: username })
             });
-            if (!res.ok) throw new Error('Failed to create user');
+            if (!res.ok) {
+                console.log("Error code:", res.status)
+                throw new Error(`HTTP Error with status: ${res.status}`)
+            }
             const data = await res.json();
+            console.log(data);
             userNameDisplay.innerText = data.name;
             userNameDisplay2.innerText = data.name;
             showMessage(`Welcome, ${data.name}!`);
