@@ -6,8 +6,8 @@
     "test": "jest",
     "start": "node .",
     "start:dev": "nodemon .",
-    "build": "node -e \"const fs=require('fs'); if(fs.existsSync('public_html')) fs.cpSync('public_html','public',{recursive:true})\"",
-    "postinstall": "npm run build"
+    "copy-public": "node -e \"const fs=require('fs'); if(fs.existsSync('public_html')) fs.cpSync('public_html','public',{recursive:true})\"",
+    "postinstall": "npm run copy-public"
   },
   "author": "",
   "license": "ISC",
