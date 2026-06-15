@@ -7,8 +7,6 @@ const fs = require('fs');
 
 const pages = require('./pagesData');
 
-const createDB = require('./createDB');
-
 const northData = require('./data/north.json');
 const centralData = require('./data/central.json');
 const southData = require('./data/south.json');
@@ -114,6 +112,7 @@ app.get('/explore/:region/:card', (req, res) => {
 
 //Subscription Form
 app.post('/subscribe', (req, res) => {
+    const createDB = require('./createDB');
     const { email } = req.body;
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -177,6 +176,7 @@ function performSearch(query) {
 
 //Contact Form
 app.post('/contact', (req, res) => {
+    const createDB = require('./createDB');
     const contactData = req.body;
 
     if (!contactData.firstname || !contactData.lastname || !contactData.email) {
@@ -236,6 +236,7 @@ app.get('/contact-success', (req, res) => {
 
 //Feedback Form
 app.post('/feedback', (req, res) => {
+    const createDB = require('./createDB');
     const feedbackData = req.body;
 
     if (!feedbackData.firstname || !feedbackData.email || !feedbackData.overall || !feedbackData.quality || !feedbackData.responsiveness || !feedbackData.expectations || !feedbackData.recommend) {
