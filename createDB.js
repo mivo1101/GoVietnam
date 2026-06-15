@@ -1,124 +1,76 @@
-const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
+const path = require('path');
 
-const db = new sqlite3.Database('database.db', (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        db.run(`CREATE TABLE IF NOT EXISTS subscriptions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT UNIQUE NOT NULL
-        )`, (err) => {
-            if (err) {
-                console.error('Error creating subscriptions table:', err.message);
-            }
-        });
+const dataDir = process.env.VERCEL
+    ? path.join('/tmp', 'govietnam-data')
+    : path.join(__dirname, 'data', 'store');
 
-        db.run(`CREATE TABLE IF NOT EXISTS contacts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            firstname TEXT NOT NULL,
-            lastname TEXT NOT NULL,
-            nationality TEXT NOT NULL,
-            phone TEXT,
-            email TEXT NOT NULL,
-            dob DATE,
-            travelertype TEXT,
-            travelpriorities TEXT,
-            travelstyle TEXT NOT NULL,
-            trippace TEXT NOT NULL,
-            regions TEXT,
-            specificspots TEXT NOT NULL,
-            spotsinput TEXT,
-            startdate DATE NOT NULL,
-            enddate DATE NOT NULL,
-            numbertravelers INTEGER NOT NULL,
-            extra TEXT
-        )`, (err) => {
-            if (err) {
-                console.error('Error creating contacts table:', err.message);
-            }
-        });
-
-        db.run(`CREATE TABLE IF NOT EXISTS feedback (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            firstname TEXT NOT NULL,
-            email TEXT NOT NULL,
-            nationality TEXT,
-            phone TEXT,
-            overall TEXT NOT NULL,
-            quality TEXT NOT NULL,
-            responsiveness TEXT NOT NULL,
-            expectations TEXT NOT NULL,
-            recommend TEXT NOT NULL,
-            comments TEXT
-        )`, (err) => {
-            if (err) {
-                console.error('Error creating feedback table:', err.message);
-            }
-        });
+function ensureDataDir() {
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
     }
-});
+}
+
+function readStore(filename) {
+    ensureDataDir();
+    const filePath = path.join(dataDir, filename);
+    if (!fs.existsSync(filePath)) {
+        return [];
+    }
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+function writeStore(filename, rows) {
+    ensureDataDir();
+    fs.writeFileSync(path.join(dataDir, filename), JSON.stringify(rows, null, 2));
+}
 
 function addSubscription(email, callback) {
-    db.run(`INSERT INTO subscriptions (email) VALUES (?)`, [email], function(err) {
-        if (err) {
-            console.error('Database insert error:', err.message); // Log the error message
-        }
-        callback(err, this);
-    });
+    const rows = readStore('subscriptions.json');
+    if (rows.some((row) => row.email === email)) {
+        const err = new Error('Email already subscribed.');
+        err.code = 'SQLITE_CONSTRAINT';
+        return callback(err);
+    }
+
+    rows.push({ id: rows.length + 1, email });
+    writeStore('subscriptions.json', rows);
+    callback(null, { lastID: rows.length });
 }
 
 function getAllSubscriptions(callback) {
-    db.all(`SELECT * FROM subscriptions`, [], (err, rows) => {
-        callback(err, rows);
-    });
+    callback(null, readStore('subscriptions.json'));
 }
 
 function addContact(contact, callback) {
-    const { firstname, lastname, nationality, phone, email, dob, travelertype, travelpriorities, travelstyle, trippace, regions, specificspots, spotsinput, preferred_travel_dates } = contact;
-
-    db.run(`INSERT INTO contacts (firstname, lastname, nationality, phone, email, dob, travelertype, travelpriorities, travelstyle, trippace, regions, specificspots, spotsinput, preferred_travel_dates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-        [firstname, lastname, nationality, phone, email, dob, travelertype, travelpriorities, travelstyle, trippace, regions, specificspots, spotsinput, preferred_travel_dates], 
-        function(err) {
-            if (err) {
-                console.error('Database insert error:', err.message); // Log the error message
-            }
-            callback(err, this);
-        });
+    const rows = readStore('contacts.json');
+    rows.push({
+        id: rows.length + 1,
+        ...contact
+    });
+    writeStore('contacts.json', rows);
+    callback(null, { lastID: rows.length });
 }
 
 function getAllContacts(callback) {
-    db.all(`SELECT * FROM contacts`, [], (err, rows) => {
-        callback(err, rows);
-    });
+    callback(null, readStore('contacts.json'));
 }
 
 function addFeedback(feedback, callback) {
-    const { firstname, email, nationality, phone, overall, quality, responsiveness, expectations, recommend, comments } = feedback;
-
-    db.run(`INSERT INTO feedback (firstname, email, nationality, phone, overall, quality, responsiveness, expectations, recommend, comments) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [firstname, email, nationality || null, phone || null, overall, quality, responsiveness, expectations, recommend, comments || null], 
-        function(err) {
-            if (err) {
-                console.error('Database insert error:', err.message);
-            }
-            callback(err, this);
-        });
+    const rows = readStore('feedback.json');
+    rows.push({
+        id: rows.length + 1,
+        ...feedback
+    });
+    writeStore('feedback.json', rows);
+    callback(null, { lastID: rows.length });
 }
 
 function getAllFeedback(callback) {
-    db.all(`SELECT * FROM feedback`, [], (err, rows) => {
-        callback(err, rows);
-    });
+    callback(null, readStore('feedback.json'));
 }
 
-function closeDatabase() {
-    db.close((err) => {
-        if (err) {
-            console.error('Error closing database:', err.message);
-        }
-    });
-}
+function closeDatabase() {}
 
 module.exports = {
     addSubscription,

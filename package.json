@@ -6,7 +6,8 @@
     "test": "jest",
     "start": "node .",
     "start:dev": "nodemon .",
-    "build": "node -e \"require('fs').cpSync('public_html','public',{recursive:true})\""
+    "build": "node -e \"const fs=require('fs'); if(fs.existsSync('public_html')) fs.cpSync('public_html','public',{recursive:true})\"",
+    "postinstall": "npm run build"
   },
   "author": "",
   "license": "ISC",
@@ -18,7 +19,6 @@
     "body-parser": "^1.20.3",
     "ejs": "^3.1.10",
     "express": "^4.21.0",
-    "morgan": "^1.10.0",
-    "sqlite3": "^5.1.7"
+    "morgan": "^1.10.0"
   }
 }
