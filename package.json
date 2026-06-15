@@ -1,11 +1,11 @@
 {
   "name": "govietnam",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "jest",
-    "start": "node .",
-    "start:dev": "nodemon .",
+    "start": "node app.js",
+    "start:dev": "nodemon app.js",
     "copy-public": "node -e \"const fs=require('fs'); if(fs.existsSync('public_html')) fs.cpSync('public_html','public',{recursive:true})\"",
     "postinstall": "npm run copy-public"
   },
